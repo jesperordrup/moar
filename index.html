@@ -80,7 +80,7 @@
     .music-button {
       position: fixed;
       left: 50%;
-      bottom: 5.5rem;
+      top: calc(100vh - 8rem);
       z-index: 10;
       border: 0;
       border-radius: 999px;
@@ -90,9 +90,9 @@
       background: linear-gradient(135deg, #fff1a8, var(--gold));
       box-shadow: 0 10px 0 #8f386a, 0 20px 35px rgba(0,0,0,.35);
       cursor: pointer;
-      transform: translateX(-50%) rotate(-2deg);
+      transform: translate(-50%, -50%) rotate(-2deg);
       animation: button-shake .72s ease-in-out infinite;
-      transition: transform .18s ease, box-shadow .18s ease;
+      transition: left .75s cubic-bezier(.18,.9,.22,1.12), top .75s cubic-bezier(.18,.9,.22,1.12), transform .18s ease, box-shadow .18s ease;
     }
 
     .music-button:hover {
@@ -103,7 +103,7 @@
       background: linear-gradient(135deg, #ff8dc1, var(--dress));
       color: white;
       animation: none;
-      transform: translateX(-50%) rotate(0deg);
+      transform: translate(-50%, -50%) rotate(0deg);
     }
 
     .scene {
@@ -289,12 +289,12 @@
     .n3 { right: 26%; top: 30%; animation-delay: -1.5s; }
 
     @keyframes button-shake {
-      0%, 100% { transform: translateX(-50%) rotate(-2deg) translateY(0); }
-      15% { transform: translateX(calc(-50% - 4px)) rotate(-7deg) translateY(-1px); }
-      30% { transform: translateX(calc(-50% + 5px)) rotate(6deg) translateY(1px); }
-      45% { transform: translateX(calc(-50% - 3px)) rotate(-5deg) translateY(-1px); }
-      60% { transform: translateX(calc(-50% + 3px)) rotate(4deg) translateY(0); }
-      75% { transform: translateX(-50%) rotate(-1deg) translateY(-2px); }
+      0%, 100% { transform: translate(-50%, -50%) rotate(-2deg); }
+      15% { transform: translate(calc(-50% - 4px), calc(-50% - 1px)) rotate(-7deg); }
+      30% { transform: translate(calc(-50% + 5px), calc(-50% + 1px)) rotate(6deg); }
+      45% { transform: translate(calc(-50% - 3px), calc(-50% - 1px)) rotate(-5deg); }
+      60% { transform: translate(calc(-50% + 3px), -50%) rotate(4deg); }
+      75% { transform: translate(-50%, calc(-50% - 2px)) rotate(-1deg); }
     }
 
     @keyframes title-to-side {
@@ -349,7 +349,7 @@
 </head>
 <body>
   <div class="stars"></div>
-  <button class="music-button" type="button" aria-pressed="false">▶ Spil Hammer</button>
+  <button class="music-button" type="button" aria-pressed="false">Play &gt;</button>
   <audio id="hammer-audio" src="hammerfedt.mp3" loop preload="auto"></audio>
   <main aria-label="En animeret klode med Olde K. ovenpå">
     <h1>Olde K. danser på kloden</h1>
@@ -384,18 +384,49 @@
   <script>
     const button = document.querySelector('.music-button');
     const audio = document.querySelector('#hammer-audio');
+    let moveTimer;
+    let hovering = false;
+
+    function moveButtonRandomly() {
+      if (hovering || !audio.paused) return;
+      const margin = 70;
+      const x = margin + Math.random() * (window.innerWidth - margin * 2);
+      const y = margin + Math.random() * (window.innerHeight - margin * 2);
+      button.style.left = `${x}px`;
+      button.style.top = `${y}px`;
+    }
+
+    function startMoving() {
+      clearInterval(moveTimer);
+      moveTimer = setInterval(moveButtonRandomly, 1400);
+    }
+
+    startMoving();
+    setTimeout(moveButtonRandomly, 500);
+
+    button.addEventListener('mouseenter', () => {
+      hovering = true;
+      clearInterval(moveTimer);
+    });
+
+    button.addEventListener('mouseleave', () => {
+      hovering = false;
+      if (audio.paused) startMoving();
+    });
 
     button.addEventListener('click', async () => {
       if (audio.paused) {
         await audio.play();
+        clearInterval(moveTimer);
         button.classList.add('playing');
         button.setAttribute('aria-pressed', 'true');
-        button.textContent = '■ Stop Hammer';
+        button.textContent = 'Stop';
       } else {
         audio.pause();
+        if (!hovering) startMoving();
         button.classList.remove('playing');
         button.setAttribute('aria-pressed', 'false');
-        button.textContent = '▶ Spil Hammer';
+        button.textContent = 'Play >';
       }
     });
   </script>
